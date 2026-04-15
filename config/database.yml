@@ -1,0 +1,15 @@
+default: &default
+  adapter: mysql2
+  encoding: utf8mb4
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  url: <%= ENV["DATABASE_URL"] %>
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+  url: <%= ENV.fetch("DATABASE_URL_TEST", ENV["DATABASE_URL"]&.sub(/development/, "test") || "mysql2://root:foaf_dev_password@db:3306/foaf_protocol_test") %>
+
+production:
+  <<: *default
