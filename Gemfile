@@ -9,6 +9,9 @@ gem "puma", "~> 6.0"
 # Crypto — secp256k1 signature verification
 gem "eth", "~> 0.5"
 
+# CORS
+gem "rack-cors", "~> 2.0"
+
 # JSON serialization
 gem "jbuilder", "~> 2.7"
 
