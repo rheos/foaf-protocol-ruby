@@ -1,0 +1,130 @@
+  [1m[35m (2.8ms)[0m  [1m[35mCREATE DATABASE `foaf_protocol_development` DEFAULT CHARACTER SET `utf8mb4`[0m
+  [1m[35m (9.0ms)[0m  [1m[35mCREATE TABLE `schema_migrations` (`version` varchar(255) NOT NULL PRIMARY KEY)[0m
+  [1m[35m (8.5ms)[0m  [1m[35mCREATE TABLE `ar_internal_metadata` (`key` varchar(255) NOT NULL PRIMARY KEY, `value` varchar(255), `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL)[0m
+  [1m[35m (0.3ms)[0m  [1m[34mSELECT GET_LOCK('3566095939929547500', 0)[0m
+  [1m[36mActiveRecord::SchemaMigration Load (4.2ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.9ms)[0m  [1m[34mSELECT * FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'environment' ORDER BY `ar_internal_metadata`.`key` ASC LIMIT 1[0m
+  [1m[36mActiveRecord::InternalMetadata Create (1.7ms)[0m  [1m[32mINSERT INTO `ar_internal_metadata` (`key`, `value`, `created_at`, `updated_at`) VALUES ('environment', 'development', '2026-04-16 00:11:34.721985', '2026-04-16 00:11:34.721990')[0m
+Migrating to CreateCurrencyNetworks (20260415000001)
+  [1m[35m (12.1ms)[0m  [1m[35mCREATE TABLE `currency_networks` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `address` varchar(42) NOT NULL, `name` varchar(255) NOT NULL, `symbol` varchar(255) NOT NULL, `decimals` int DEFAULT 2 NOT NULL, `capacity_imbalance_fee_divisor` int DEFAULT 0 NOT NULL, `default_interest_rate` int DEFAULT 0 NOT NULL, `custom_interests` tinyint(1) DEFAULT FALSE NOT NULL, `prevent_mediator_interests` tinyint(1) DEFAULT FALSE NOT NULL, `max_hops` int DEFAULT 5 NOT NULL, `is_frozen` tinyint(1) DEFAULT FALSE NOT NULL, `owner_address` varchar(42), `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, UNIQUE INDEX `index_currency_networks_on_address` (`address`), UNIQUE INDEX `index_currency_networks_on_symbol` (`symbol`))[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.4ms)[0m  [1m[32mINSERT INTO `schema_migrations` (`version`) VALUES ('20260415000001')[0m
+Migrating to CreateIdentities (20260415000002)
+  [1m[35m (10.7ms)[0m  [1m[35mCREATE TABLE `identities` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `address` varchar(42) NOT NULL, `public_key` text NOT NULL, `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, UNIQUE INDEX `index_identities_on_address` (`address`))[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.3ms)[0m  [1m[32mINSERT INTO `schema_migrations` (`version`) VALUES ('20260415000002')[0m
+Migrating to CreateTrustlines (20260415000003)
+  [1m[35m (19.8ms)[0m  [1m[35mCREATE TABLE `trustlines` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `currency_network_id` bigint NOT NULL, `user_a_address` varchar(42) NOT NULL, `user_b_address` varchar(42) NOT NULL, `creditline_given` decimal(20,2) DEFAULT 0.0 NOT NULL, `creditline_received` decimal(20,2) DEFAULT 0.0 NOT NULL, `interest_rate_given` int DEFAULT 0 NOT NULL, `interest_rate_received` int DEFAULT 0 NOT NULL, `is_frozen` tinyint(1) DEFAULT FALSE NOT NULL, `allow_routing` tinyint(1) DEFAULT TRUE NOT NULL, `balance` decimal(20,2) DEFAULT 0.0 NOT NULL, `balance_mtime` int DEFAULT 0 NOT NULL, `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, INDEX `index_trustlines_on_currency_network_id` (`currency_network_id`), UNIQUE INDEX `idx_trustlines_network_user_pair` (`currency_network_id`, `user_a_address`, `user_b_address`), INDEX `index_trustlines_on_user_a_address` (`user_a_address`), INDEX `index_trustlines_on_user_b_address` (`user_b_address`), CONSTRAINT `fk_rails_3cf826be3b`
+FOREIGN KEY (`currency_network_id`)
+  REFERENCES `currency_networks` (`id`)
+)[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.0ms)[0m  [1m[32mINSERT INTO `schema_migrations` (`version`) VALUES ('20260415000003')[0m
+Migrating to CreateTrustlineUpdateRequests (20260415000004)
+  [1m[35m (0.6ms)[0m  [1m[35mCREATE TABLE `trustline_update_requests` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `trustline_id` bigint NOT NULL, `creditline_given` decimal(20,2) NOT NULL, `creditline_received` decimal(20,2) NOT NULL, `interest_rate_given` int DEFAULT 0 NOT NULL, `interest_rate_received` int DEFAULT 0 NOT NULL, `is_frozen` tinyint(1) DEFAULT FALSE NOT NULL, `initiator_address` varchar(42) NOT NULL, `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, INDEX `index_trustline_update_requests_on_trustline_id` (`trustline_id`), UNIQUE INDEX `index_trustline_update_requests_on_trustline_id` (`trustline_id`), CONSTRAINT `fk_rails_256aebc17b`
+FOREIGN KEY (`trustline_id`)
+  REFERENCES `trustlines` (`id`)
+)[0m
+  [1m[35m (0.5ms)[0m  [1m[34mSELECT RELEASE_LOCK('3566095939929547500')[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.4ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.4ms)[0m  [1m[34mSELECT * FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'environment' ORDER BY `ar_internal_metadata`.`key` ASC LIMIT 1[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.4ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.4ms)[0m  [1m[34mSELECT * FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'environment' ORDER BY `ar_internal_metadata`.`key` ASC LIMIT 1[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.2ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.3ms)[0m  [1m[34mSELECT * FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'environment' ORDER BY `ar_internal_metadata`.`key` ASC LIMIT 1[0m
+  [1m[35m (19.7ms)[0m  [1m[35mDROP DATABASE IF EXISTS `foaf_protocol_development`[0m
+  [1m[35m (2.3ms)[0m  [1m[35mCREATE DATABASE `foaf_protocol_development` DEFAULT CHARACTER SET `utf8mb4`[0m
+  [1m[35m (7.2ms)[0m  [1m[35mCREATE TABLE `schema_migrations` (`version` varchar(255) NOT NULL PRIMARY KEY)[0m
+  [1m[35m (6.5ms)[0m  [1m[35mCREATE TABLE `ar_internal_metadata` (`key` varchar(255) NOT NULL PRIMARY KEY, `value` varchar(255), `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL)[0m
+  [1m[35m (0.2ms)[0m  [1m[34mSELECT GET_LOCK('3566095939929547500', 0)[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.4ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.4ms)[0m  [1m[34mSELECT * FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'environment' ORDER BY `ar_internal_metadata`.`key` ASC LIMIT 1[0m
+  [1m[36mActiveRecord::InternalMetadata Create (1.7ms)[0m  [1m[32mINSERT INTO `ar_internal_metadata` (`key`, `value`, `created_at`, `updated_at`) VALUES ('environment', 'development', '2026-04-16 00:11:56.481592', '2026-04-16 00:11:56.481596')[0m
+Migrating to CreateCurrencyNetworks (20260415000001)
+  [1m[35m (13.8ms)[0m  [1m[35mCREATE TABLE `currency_networks` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `address` varchar(42) NOT NULL, `name` varchar(255) NOT NULL, `symbol` varchar(255) NOT NULL, `decimals` int DEFAULT 2 NOT NULL, `capacity_imbalance_fee_divisor` int DEFAULT 0 NOT NULL, `default_interest_rate` int DEFAULT 0 NOT NULL, `custom_interests` tinyint(1) DEFAULT FALSE NOT NULL, `prevent_mediator_interests` tinyint(1) DEFAULT FALSE NOT NULL, `max_hops` int DEFAULT 5 NOT NULL, `is_frozen` tinyint(1) DEFAULT FALSE NOT NULL, `owner_address` varchar(42), `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, UNIQUE INDEX `index_currency_networks_on_address` (`address`), UNIQUE INDEX `index_currency_networks_on_symbol` (`symbol`))[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.2ms)[0m  [1m[32mINSERT INTO `schema_migrations` (`version`) VALUES ('20260415000001')[0m
+Migrating to CreateIdentities (20260415000002)
+  [1m[35m (11.5ms)[0m  [1m[35mCREATE TABLE `identities` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `address` varchar(42) NOT NULL, `public_key` text NOT NULL, `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, UNIQUE INDEX `index_identities_on_address` (`address`))[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.3ms)[0m  [1m[32mINSERT INTO `schema_migrations` (`version`) VALUES ('20260415000002')[0m
+Migrating to CreateTrustlines (20260415000003)
+  [1m[35m (15.1ms)[0m  [1m[35mCREATE TABLE `trustlines` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `currency_network_id` bigint NOT NULL, `user_a_address` varchar(42) NOT NULL, `user_b_address` varchar(42) NOT NULL, `creditline_given` decimal(20,2) DEFAULT 0.0 NOT NULL, `creditline_received` decimal(20,2) DEFAULT 0.0 NOT NULL, `interest_rate_given` int DEFAULT 0 NOT NULL, `interest_rate_received` int DEFAULT 0 NOT NULL, `is_frozen` tinyint(1) DEFAULT FALSE NOT NULL, `allow_routing` tinyint(1) DEFAULT TRUE NOT NULL, `balance` decimal(20,2) DEFAULT 0.0 NOT NULL, `balance_mtime` int DEFAULT 0 NOT NULL, `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, INDEX `index_trustlines_on_currency_network_id` (`currency_network_id`), UNIQUE INDEX `idx_trustlines_network_user_pair` (`currency_network_id`, `user_a_address`, `user_b_address`), INDEX `index_trustlines_on_user_a_address` (`user_a_address`), INDEX `index_trustlines_on_user_b_address` (`user_b_address`), CONSTRAINT `fk_rails_3cf826be3b`
+FOREIGN KEY (`currency_network_id`)
+  REFERENCES `currency_networks` (`id`)
+)[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.0ms)[0m  [1m[32mINSERT INTO `schema_migrations` (`version`) VALUES ('20260415000003')[0m
+Migrating to CreateTrustlineUpdateRequests (20260415000004)
+  [1m[35m (9.1ms)[0m  [1m[35mCREATE TABLE `trustline_update_requests` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `trustline_id` bigint NOT NULL, `creditline_given` decimal(20,2) NOT NULL, `creditline_received` decimal(20,2) NOT NULL, `interest_rate_given` int DEFAULT 0 NOT NULL, `interest_rate_received` int DEFAULT 0 NOT NULL, `is_frozen` tinyint(1) DEFAULT FALSE NOT NULL, `initiator_address` varchar(42) NOT NULL, `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, UNIQUE INDEX `index_trustline_update_requests_on_trustline_id` (`trustline_id`), CONSTRAINT `fk_rails_256aebc17b`
+FOREIGN KEY (`trustline_id`)
+  REFERENCES `trustlines` (`id`)
+)[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.6ms)[0m  [1m[32mINSERT INTO `schema_migrations` (`version`) VALUES ('20260415000004')[0m
+Migrating to CreateOperations (20260415000005)
+  [1m[35m (41.7ms)[0m  [1m[35mCREATE TABLE `operations` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `operation_type` varchar(255) NOT NULL, `module_name` varchar(255) NOT NULL, `currency_network_id` bigint, `actor_address` varchar(42) NOT NULL, `inputs` json NOT NULL, `nonce` bigint, `signature` text, `idempotency_key` varchar(64), `multi_hop_id` varchar(36), `parent_operation_id` bigint, `fee_amount` decimal(20,2) DEFAULT 0.0, `fee_currency` varchar(10), `fee_distribution` json, `status` varchar(255) DEFAULT 'applied' NOT NULL, `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, INDEX `index_operations_on_currency_network_id` (`currency_network_id`), INDEX `index_operations_on_operation_type` (`operation_type`), INDEX `index_operations_on_actor_address` (`actor_address`), INDEX `index_operations_on_multi_hop_id` (`multi_hop_id`), UNIQUE INDEX `index_operations_on_idempotency_key` (`idempotency_key`), INDEX `index_operations_on_parent_operation_id` (`parent_operation_id`), INDEX `idx_ops_network_time` (`currency_network_id`, `created_at`), CONSTRAINT `fk_rails_b67aff99ce`
+FOREIGN KEY (`currency_network_id`)
+  REFERENCES `currency_networks` (`id`)
+)[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.1ms)[0m  [1m[32mINSERT INTO `schema_migrations` (`version`) VALUES ('20260415000005')[0m
+Migrating to CreateTrustlineEvents (20260415000006)
+  [1m[35m (21.7ms)[0m  [1m[35mCREATE TABLE `trustline_events` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `operation_id` bigint NOT NULL, `currency_network_id` bigint NOT NULL, `event_type` varchar(255) NOT NULL, `from_address` varchar(42) NOT NULL, `to_address` varchar(42) NOT NULL, `value` decimal(20,2), `extra_data` text, `creditline_given` decimal(20,2), `creditline_received` decimal(20,2), `interest_rate_given` int, `interest_rate_received` int, `is_frozen` tinyint(1), `balance` decimal(20,2), `path` json, `fee_payer` varchar(10), `total_fees` decimal(20,2), `fees_paid` json, `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, INDEX `index_trustline_events_on_operation_id` (`operation_id`), INDEX `index_trustline_events_on_currency_network_id` (`currency_network_id`), INDEX `index_trustline_events_on_event_type` (`event_type`), INDEX `index_trustline_events_on_from_address` (`from_address`), INDEX `index_trustline_events_on_to_address` (`to_address`), INDEX `idx_events_network_type_time` (`currency_network_id`, `event_type`, `created_at`), INDEX `idx_events_from_type` (`from_address`, `event_type`), INDEX `idx_events_to_type` (`to_address`, `event_type`), CONSTRAINT `fk_rails_18f9d1b66d`
+FOREIGN KEY (`operation_id`)
+  REFERENCES `operations` (`id`)
+, CONSTRAINT `fk_rails_0b35c91eb5`
+FOREIGN KEY (`currency_network_id`)
+  REFERENCES `currency_networks` (`id`)
+)[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.0ms)[0m  [1m[32mINSERT INTO `schema_migrations` (`version`) VALUES ('20260415000006')[0m
+Migrating to CreatePendingTransfers (20260415000007)
+  [1m[35m (15.4ms)[0m  [1m[35mCREATE TABLE `pending_transfers` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `currency_network_id` bigint NOT NULL, `from_address` varchar(42) NOT NULL, `to_address` varchar(42) NOT NULL, `value` decimal(20,2) NOT NULL, `max_fee` decimal(20,2) DEFAULT 0.0 NOT NULL, `fee_payer` varchar(10) DEFAULT 'sender' NOT NULL, `path` json, `extra_data` text, `status` varchar(255) DEFAULT 'pending' NOT NULL, `rejected_reason` text, `confirmed_at` datetime(6), `resolved_at` datetime(6), `nonce` bigint, `signature` text, `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, INDEX `index_pending_transfers_on_currency_network_id` (`currency_network_id`), INDEX `index_pending_transfers_on_status` (`status`), INDEX `index_pending_transfers_on_from_address` (`from_address`), INDEX `index_pending_transfers_on_to_address` (`to_address`), CONSTRAINT `fk_rails_1c89863ddd`
+FOREIGN KEY (`currency_network_id`)
+  REFERENCES `currency_networks` (`id`)
+)[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.0ms)[0m  [1m[32mINSERT INTO `schema_migrations` (`version`) VALUES ('20260415000007')[0m
+Migrating to CreateProtocolParameters (20260415000008)
+  [1m[35m (9.5ms)[0m  [1m[35mCREATE TABLE `protocol_parameters` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `key` varchar(255) NOT NULL, `value` varchar(255) NOT NULL, `description` varchar(255), `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, UNIQUE INDEX `index_protocol_parameters_on_key` (`key`))[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.0ms)[0m  [1m[32mINSERT INTO `schema_migrations` (`version`) VALUES ('20260415000008')[0m
+  [1m[35m (0.2ms)[0m  [1m[34mSELECT RELEASE_LOCK('3566095939929547500')[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.3ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.5ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[36mProtocolParameter Load (0.3ms)[0m  [1m[34mSELECT `protocol_parameters`.* FROM `protocol_parameters` WHERE `protocol_parameters`.`key` = 'transaction_fee_bps' LIMIT 1[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mProtocolParameter Exists? (0.4ms)[0m  [1m[34mSELECT 1 AS one FROM `protocol_parameters` WHERE `protocol_parameters`.`key` = 'transaction_fee_bps' LIMIT 1[0m
+  [1m[36mProtocolParameter Create (0.4ms)[0m  [1m[32mINSERT INTO `protocol_parameters` (`key`, `value`, `description`, `created_at`, `updated_at`) VALUES ('transaction_fee_bps', '0', 'Transaction fee in basis points (0 = disabled)', '2026-04-16 00:12:04.166357', '2026-04-16 00:12:04.166357')[0m
+  [1m[36mTRANSACTION (1.7ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mProtocolParameter Load (0.3ms)[0m  [1m[34mSELECT `protocol_parameters`.* FROM `protocol_parameters` WHERE `protocol_parameters`.`key` = 'markup_fee_bps' LIMIT 1[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mProtocolParameter Exists? (2.5ms)[0m  [1m[34mSELECT 1 AS one FROM `protocol_parameters` WHERE `protocol_parameters`.`key` = 'markup_fee_bps' LIMIT 1[0m
+  [1m[36mProtocolParameter Create (0.4ms)[0m  [1m[32mINSERT INTO `protocol_parameters` (`key`, `value`, `description`, `created_at`, `updated_at`) VALUES ('markup_fee_bps', '0', 'Markup fee in basis points (0 = disabled)', '2026-04-16 00:12:04.178299', '2026-04-16 00:12:04.178299')[0m
+  [1m[36mTRANSACTION (1.1ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mProtocolParameter Load (0.3ms)[0m  [1m[34mSELECT `protocol_parameters`.* FROM `protocol_parameters` WHERE `protocol_parameters`.`key` = 'routing_premium_bps' LIMIT 1[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mProtocolParameter Exists? (2.0ms)[0m  [1m[34mSELECT 1 AS one FROM `protocol_parameters` WHERE `protocol_parameters`.`key` = 'routing_premium_bps' LIMIT 1[0m
+  [1m[36mProtocolParameter Create (0.3ms)[0m  [1m[32mINSERT INTO `protocol_parameters` (`key`, `value`, `description`, `created_at`, `updated_at`) VALUES ('routing_premium_bps', '0', 'Routing premium in basis points (0 = disabled)', '2026-04-16 00:12:04.188050', '2026-04-16 00:12:04.188050')[0m
+  [1m[36mTRANSACTION (0.9ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mProtocolParameter Load (0.3ms)[0m  [1m[34mSELECT `protocol_parameters`.* FROM `protocol_parameters` WHERE `protocol_parameters`.`key` = 'max_hops_default' LIMIT 1[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mProtocolParameter Exists? (1.8ms)[0m  [1m[34mSELECT 1 AS one FROM `protocol_parameters` WHERE `protocol_parameters`.`key` = 'max_hops_default' LIMIT 1[0m
+  [1m[36mProtocolParameter Create (0.3ms)[0m  [1m[32mINSERT INTO `protocol_parameters` (`key`, `value`, `description`, `created_at`, `updated_at`) VALUES ('max_hops_default', '5', 'Default maximum hops for multi-hop transfers', '2026-04-16 00:12:04.196632', '2026-04-16 00:12:04.196632')[0m
+  [1m[36mTRANSACTION (1.3ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mProtocolParameter Load (0.5ms)[0m  [1m[34mSELECT `protocol_parameters`.* FROM `protocol_parameters` WHERE `protocol_parameters`.`key` = 'fee_distribution_node_pct' LIMIT 1[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mProtocolParameter Exists? (2.2ms)[0m  [1m[34mSELECT 1 AS one FROM `protocol_parameters` WHERE `protocol_parameters`.`key` = 'fee_distribution_node_pct' LIMIT 1[0m
+  [1m[36mProtocolParameter Create (0.4ms)[0m  [1m[32mINSERT INTO `protocol_parameters` (`key`, `value`, `description`, `created_at`, `updated_at`) VALUES ('fee_distribution_node_pct', '50', 'Fee distribution: node operators percentage', '2026-04-16 00:12:04.224941', '2026-04-16 00:12:04.224941')[0m
+  [1m[36mTRANSACTION (1.3ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mProtocolParameter Load (0.3ms)[0m  [1m[34mSELECT `protocol_parameters`.* FROM `protocol_parameters` WHERE `protocol_parameters`.`key` = 'fee_distribution_treasury_pct' LIMIT 1[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mProtocolParameter Exists? (1.9ms)[0m  [1m[34mSELECT 1 AS one FROM `protocol_parameters` WHERE `protocol_parameters`.`key` = 'fee_distribution_treasury_pct' LIMIT 1[0m
+  [1m[36mProtocolParameter Create (0.4ms)[0m  [1m[32mINSERT INTO `protocol_parameters` (`key`, `value`, `description`, `created_at`, `updated_at`) VALUES ('fee_distribution_treasury_pct', '30', 'Fee distribution: treasury percentage', '2026-04-16 00:12:04.234914', '2026-04-16 00:12:04.234914')[0m
+  [1m[36mTRANSACTION (1.3ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mProtocolParameter Load (0.3ms)[0m  [1m[34mSELECT `protocol_parameters`.* FROM `protocol_parameters` WHERE `protocol_parameters`.`key` = 'fee_distribution_burn_pct' LIMIT 1[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mProtocolParameter Exists? (2.8ms)[0m  [1m[34mSELECT 1 AS one FROM `protocol_parameters` WHERE `protocol_parameters`.`key` = 'fee_distribution_burn_pct' LIMIT 1[0m
+  [1m[36mProtocolParameter Create (0.4ms)[0m  [1m[32mINSERT INTO `protocol_parameters` (`key`, `value`, `description`, `created_at`, `updated_at`) VALUES ('fee_distribution_burn_pct', '20', 'Fee distribution: burn percentage', '2026-04-16 00:12:04.248817', '2026-04-16 00:12:04.248817')[0m
+  [1m[36mTRANSACTION (1.2ms)[0m  [1m[35mCOMMIT[0m
+Started GET "/api/v1/version" for 151.101.129.227 at 2026-04-16 00:12:10 +0000
+  [1m[36mActiveRecord::SchemaMigration Load (0.5ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  
+ActionController::RoutingError (uninitialized constant Api):
+
+Causes:
+ActionDispatch::MissingController (uninitialized constant Api)
+NameError (uninitialized constant Api)
+  
+  [1m[36mProtocolParameter Count (0.2ms)[0m  [1m[34mSELECT COUNT(*) FROM `protocol_parameters`[0m
+  [1m[36mProtocolParameter Pluck (0.3ms)[0m  [1m[34mSELECT `protocol_parameters`.`key`, `protocol_parameters`.`value` FROM `protocol_parameters`[0m
