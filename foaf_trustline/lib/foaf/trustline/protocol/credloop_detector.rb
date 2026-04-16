@@ -11,6 +11,12 @@ module Foaf
       #
       # No Rails, no I/O, no database. Takes a list of edges, returns cycles.
       #
+      # Multiple algorithms available:
+      #   :dfs          — brute-force DFS, finds ALL cycles. Good for small networks.
+      #   :triangulation — Trustlines Foundation approach. For each non-zero trustline,
+      #                    use pathfinding to find a route from creditor back to debtor
+      #                    excluding their direct link. Capacity-aware, scales better.
+      #
       # Debt graph convention:
       #   An edge from A → B with amount X means A owes B $X.
       #   A cycle A → B → C → A means the debt flows in a circle
@@ -23,9 +29,24 @@ module Foaf
         # @param edges [Array<Hash>] each: { from:, to:, amount: }
         #   from owes to the given amount. Only include edges where amount > 0.
         # @param max_length [Integer] maximum cycle length to search for (default: 10)
+        # @param algorithm [Symbol] :dfs or :triangulation (default: :dfs)
         # @return [Array<Hash>] each: { path: [addr, ...], cancellable_amount: BigDecimal }
         #   path is ordered: path[0] owes path[1] owes ... owes path[0]
-        def find_loops(edges, max_length: 10)
+        def find_loops(edges, max_length: 10, algorithm: :dfs)
+          case algorithm
+          when :dfs
+            find_loops_dfs(edges, max_length: max_length)
+          when :triangulation
+            find_loops_triangulation(edges, max_length: max_length)
+          else
+            raise ArgumentError, "Unknown algorithm: #{algorithm}. Use :dfs or :triangulation"
+          end
+        end
+
+        # DFS algorithm — brute-force cycle finding.
+        # Finds ALL elementary cycles up to max_length.
+        # Good for small networks, expensive for large ones.
+        def find_loops_dfs(edges, max_length: 10)
           graph = build_adjacency_list(edges)
           nodes = graph.keys.sort
           loops = []
@@ -48,14 +69,92 @@ module Foaf
           loops
         end
 
+        # Triangulation algorithm — Trustlines Foundation approach.
+        # For each non-zero-balance edge, use BFS to find a path from the
+        # creditor back to the debtor, excluding their direct link.
+        # If found, that's a cancellable cycle.
+        # Capacity-aware and scales better than DFS for large networks.
+        def find_loops_triangulation(edges, max_length: 10)
+          graph = build_adjacency_list(edges)
+          loops = []
+          visited_cycles = Set.new
+
+          edges.each do |edge|
+            next unless edge[:amount] > 0
+
+            debtor = edge[:from]   # debtor owes creditor
+            creditor = edge[:to]
+
+            # Find a path from creditor back to debtor WITHOUT using the direct link
+            path = bfs_excluding_direct(
+              graph: graph,
+              from: creditor,
+              to: debtor,
+              exclude_edge: [debtor, creditor],
+              max_hops: max_length - 1  # -1 because the direct link is one hop
+            )
+
+            next unless path
+
+            # Build the full cycle: debtor → creditor → intermediaries
+            # BFS returned path from creditor to debtor (e.g. [C, A] for B→C→A)
+            # The cycle members are: debtor, creditor, then intermediaries (path without the final debtor)
+            cycle = [debtor, creditor] + path[0..-2]
+            cycle_key = normalize_cycle(cycle)
+            next if visited_cycles.include?(cycle_key)
+            visited_cycles.add(cycle_key)
+
+            # Calculate cancellable amount — minimum debt along ALL edges of the cycle
+            # The cycle is: debtor → creditor → path[1] → ... → debtor
+            all_hops = cycle.each_cons(2).to_a + [[cycle.last, cycle.first]]
+            min_amount = all_hops.map { |a, b| graph[a]&.fetch(b, nil) || BigDecimal("0") }.min
+
+            next unless min_amount && min_amount > 0
+
+            loops << { path: cycle, cancellable_amount: min_amount }
+          end
+
+          loops
+        end
+
+        # BFS from `from` to `to`, excluding one specific directed edge.
+        # The exclude_edge is the debt edge [debtor, creditor] we're trying
+        # to find an alternative route around.
+        #
+        # Returns the path from `from` to `to` (inclusive), or nil.
+        def bfs_excluding_direct(graph:, from:, to:, exclude_edge:, max_hops:)
+          visited = Set.new([from])
+          queue = [[from, [from]]]
+
+          while queue.any?
+            current, path = queue.shift
+            next if path.size > max_hops + 1
+
+            (graph[current] || {}).each_key do |neighbor|
+              # Skip the specific directed edge we're routing around
+              next if current == exclude_edge[0] && neighbor == exclude_edge[1]
+
+              if neighbor == to
+                return path[1..] + [neighbor]  # drop the starting 'from', add 'to'
+              end
+
+              next if visited.include?(neighbor)
+              visited.add(neighbor)
+              queue.push([neighbor, path + [neighbor]])
+            end
+          end
+
+          nil
+        end
+
         # Find the single best (highest value) cancellable loop.
-        # More efficient than finding all loops when you just want to cancel one.
         #
         # @param edges [Array<Hash>] same as find_loops
         # @param max_length [Integer] maximum cycle length
+        # @param algorithm [Symbol] :dfs or :triangulation
         # @return [Hash, nil] { path:, cancellable_amount: } or nil
-        def find_best_loop(edges, max_length: 10)
-          loops = find_loops(edges, max_length: max_length)
+        def find_best_loop(edges, max_length: 10, algorithm: :dfs)
+          loops = find_loops(edges, max_length: max_length, algorithm: algorithm)
           loops.max_by { |l| l[:cancellable_amount] }
         end
 
@@ -154,7 +253,8 @@ module Foaf
           rotated.join("→")
         end
 
-        private_class_method :build_adjacency_list, :dfs_find_cycles, :normalize_cycle
+        private_class_method :build_adjacency_list, :dfs_find_cycles, :normalize_cycle,
+                             :bfs_excluding_direct
       end
     end
   end

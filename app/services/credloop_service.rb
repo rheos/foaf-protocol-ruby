@@ -5,25 +5,31 @@
 # and executes cancellations as atomic multi-hop transfers.
 
 class CredloopService
+  # Available algorithms:
+  #   :triangulation — Trustlines Foundation approach (default). Uses BFS per trustline.
+  #   :dfs — brute-force DFS. Finds all cycles. Better for small networks or analysis.
+  DEFAULT_ALGORITHM = :triangulation
+
   # Find all cancellable credit loops in a network.
   #
   # @param network [CurrencyNetwork]
   # @param max_length [Integer] maximum cycle length (default: network max_hops)
-  # @return [Array<Hash>] each: { path:, cancellable_amount:, usernames: }
-  def self.find_loops(network, max_length: nil)
+  # @param algorithm [Symbol] :triangulation or :dfs
+  # @return [Array<Hash>] each: { path:, cancellable_amount: }
+  def self.find_loops(network, max_length: nil, algorithm: DEFAULT_ALGORITHM)
     max_length ||= network.max_hops
     edges = build_debt_edges(network)
-    loops = Foaf::Trustline::Protocol::CredloopDetector.find_loops(edges, max_length: max_length)
-    loops
+    Foaf::Trustline::Protocol::CredloopDetector.find_loops(edges, max_length: max_length, algorithm: algorithm)
   end
 
   # Find and cancel the single best (highest value) credit loop.
   #
   # @param network [CurrencyNetwork]
+  # @param algorithm [Symbol] :triangulation or :dfs
   # @return [Hash, nil] { operation:, path:, amount:, events: } or nil if no loops
-  def self.cancel_best_loop(network)
+  def self.cancel_best_loop(network, algorithm: DEFAULT_ALGORITHM)
     edges = build_debt_edges(network)
-    loop_info = Foaf::Trustline::Protocol::CredloopDetector.find_best_loop(edges)
+    loop_info = Foaf::Trustline::Protocol::CredloopDetector.find_best_loop(edges, algorithm: algorithm)
     return nil unless loop_info
 
     cancel_loop(network, loop_info)

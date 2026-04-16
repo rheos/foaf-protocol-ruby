@@ -126,6 +126,72 @@ RSpec.describe Foaf::Trustline::Protocol::CredloopDetector do
     end
   end
 
+  describe ".find_loops with triangulation algorithm" do
+    it "finds a simple 3-node cycle" do
+      edges = [
+        { from: "A", to: "B", amount: BigDecimal("10") },
+        { from: "B", to: "C", amount: BigDecimal("10") },
+        { from: "C", to: "A", amount: BigDecimal("10") },
+      ]
+
+      loops = cd.find_loops(edges, algorithm: :triangulation)
+      expect(loops.size).to be >= 1
+      amounts = loops.map { |l| l[:cancellable_amount] }
+      expect(amounts.max).to eq(BigDecimal("10"))
+    end
+
+    it "cancellable amount is the minimum debt in the cycle" do
+      edges = [
+        { from: "A", to: "B", amount: BigDecimal("20") },
+        { from: "B", to: "C", amount: BigDecimal("5") },
+        { from: "C", to: "A", amount: BigDecimal("15") },
+      ]
+
+      loops = cd.find_loops(edges, algorithm: :triangulation)
+      expect(loops.size).to be >= 1
+      expect(loops.first[:cancellable_amount]).to eq(BigDecimal("5"))
+    end
+
+    it "finds no loops when there are none" do
+      edges = [
+        { from: "A", to: "B", amount: BigDecimal("10") },
+        { from: "B", to: "C", amount: BigDecimal("10") },
+      ]
+
+      loops = cd.find_loops(edges, algorithm: :triangulation)
+      expect(loops).to be_empty
+    end
+
+    it "finds a 5-node cycle" do
+      edges = [
+        { from: "A", to: "B", amount: BigDecimal("10") },
+        { from: "B", to: "C", amount: BigDecimal("10") },
+        { from: "C", to: "D", amount: BigDecimal("10") },
+        { from: "D", to: "E", amount: BigDecimal("10") },
+        { from: "E", to: "A", amount: BigDecimal("10") },
+      ]
+
+      loops = cd.find_loops(edges, algorithm: :triangulation, max_length: 10)
+      expect(loops.size).to be >= 1
+      expect(loops.first[:cancellable_amount]).to eq(BigDecimal("10"))
+    end
+
+    it "both algorithms agree on a simple cycle" do
+      edges = [
+        { from: "A", to: "B", amount: BigDecimal("10") },
+        { from: "B", to: "C", amount: BigDecimal("7") },
+        { from: "C", to: "A", amount: BigDecimal("15") },
+      ]
+
+      dfs_loops = cd.find_loops(edges, algorithm: :dfs)
+      tri_loops = cd.find_loops(edges, algorithm: :triangulation)
+
+      expect(dfs_loops.size).to eq(1)
+      expect(tri_loops.size).to be >= 1
+      expect(dfs_loops.first[:cancellable_amount]).to eq(tri_loops.first[:cancellable_amount])
+    end
+  end
+
   describe ".find_best_loop" do
     it "returns the loop with highest cancellable amount" do
       edges = [
