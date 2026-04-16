@@ -5,6 +5,8 @@ module Api
     class TrustlineUpdatesController < ApiController
       # POST /api/v1/networks/:network_address/trustlines/update
       def create
+        return unless verify_signature!(params[:creditor_address])
+
         network = CurrencyNetwork.find_by!(address: params[:network_address])
 
         result = TrustlineService.update_trustline(
@@ -23,6 +25,8 @@ module Api
 
       # DELETE /api/v1/networks/:network_address/trustlines/update/:counter_party_address
       def cancel
+        return unless verify_signature!(params[:initiator_address])
+
         network = CurrencyNetwork.find_by!(address: params[:network_address])
 
         result = TrustlineService.cancel_update(

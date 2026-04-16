@@ -13,7 +13,11 @@ module Api
 
       # Verify the request is signed by the claimed actor.
       # Like blockchain nodes verifying transaction signatures.
+      # Returns true if valid, renders error and returns false if not.
       def verify_signature!(address)
+        # Skip verification if signature enforcement is not active
+        return true unless signature_enforcement?
+
         payload = request.raw_post
         signature = request.headers["X-Signature"]
 
@@ -22,12 +26,18 @@ module Api
           return false
         end
 
-        unless SignatureVerifier.verify(payload: payload, signature: signature, address: address)
+        unless SignatureVerifier.verify_by_address(payload: payload, signature: signature, address: address)
           render json: { error: "Invalid signature for address #{address}" }, status: :unauthorized
           return false
         end
 
         true
+      end
+
+      # Signature enforcement is controlled by protocol parameter.
+      # Phase 1: off by default. Flip to "true" to enable.
+      def signature_enforcement?
+        ProtocolParameter.get("signature_enforcement", default: "false") == "true"
       end
 
       def not_found(exception)

@@ -3,39 +3,55 @@
 # Verifies secp256k1 signatures on operations.
 # This is the protocol's auth layer — identical to how blockchain nodes verify transactions.
 # No passwords, no sessions, no JWT. Just cryptographic proof.
+#
+# FOAF uses the eth gem for secp256k1 operations (Ruby 3.2).
+# Consuming apps on older Ruby can use OpenSSL directly.
+# Both produce compatible signatures.
 
 class SignatureVerifier
-  # Verify that a payload was signed by the holder of the given address.
+  # Verify that a payload was signed by the holder of the given public key.
   #
-  # @param payload [String] the signed data (JSON-encoded operation)
-  # @param signature [String] hex-encoded secp256k1 signature
-  # @param address [String] expected signer address (0x-prefixed)
-  # @return [Boolean] true if signature is valid for this address
-  def self.verify(payload:, signature:, address:)
-    return false if signature.blank? || address.blank?
+  # @param payload [String] the signed data
+  # @param signature [String] hex-encoded signature
+  # @param public_key_hex [String] hex-encoded secp256k1 public key
+  # @return [Boolean] true if signature is valid
+  def self.verify(payload:, signature:, public_key_hex:)
+    return false if signature.blank? || public_key_hex.blank?
 
-    recovered_key = Eth::Key.personal_recover(payload, signature)
-    recovered_address = Eth::Util.public_key_to_address(recovered_key).to_s
-    recovered_address.downcase == address.downcase
-  rescue StandardError
+    # Recover the public key from the signature and check it matches
+    recovered = Eth::Signature.personal_recover(payload, signature)
+    recovered.downcase == public_key_hex.downcase
+  rescue StandardError => e
+    Rails.logger.debug("[SignatureVerifier] Verification failed: #{e.message}")
     false
   end
 
-  # Generate a new keypair. Used by consuming apps, not by FOAF itself.
-  # Provided as a convenience for testing and onboarding.
+  # Look up an identity's public key and verify against it.
+  #
+  # @param payload [String] the signed data
+  # @param signature [String] hex-encoded signature
+  # @param address [String] 0x-prefixed address of the signer
+  # @return [Boolean]
+  def self.verify_by_address(payload:, signature:, address:)
+    identity = Identity.find_by(address: address&.downcase)
+    return false unless identity
+
+    verify(payload: payload, signature: signature, public_key_hex: identity.public_key)
+  end
+
+  # Generate a new secp256k1 keypair.
   #
   # @return [Hash] { address:, public_key:, private_key: }
   def self.generate_keypair
     key = Eth::Key.new
     {
-      address: key.address.to_s,
+      address: key.address.to_s.downcase,
       public_key: key.public_hex,
       private_key: key.private_hex
     }
   end
 
-  # Sign a payload with a private key. Used for testing only.
-  # In production, the consuming app handles signing.
+  # Sign a payload with a private key. For testing.
   #
   # @param payload [String] data to sign
   # @param private_key [String] hex-encoded private key

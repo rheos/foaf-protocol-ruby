@@ -17,6 +17,8 @@ module Api
 
       # POST /api/v1/pending_transfers
       def create
+        return unless verify_signature!(params[:from_address])
+
         network = CurrencyNetwork.find_by!(address: params[:network_address])
 
         pt = PendingTransfer.create!(
@@ -37,6 +39,8 @@ module Api
       # PUT /api/v1/pending_transfers/:id/confirm
       def confirm
         pt = PendingTransfer.find(params[:id])
+        return unless verify_signature!(pt.to_address) # receiver confirms
+
         raise "Transfer is not pending" unless pt.pending?
 
         # Execute the actual transfer
@@ -68,6 +72,8 @@ module Api
       # PUT /api/v1/pending_transfers/:id/reject
       def reject
         pt = PendingTransfer.find(params[:id])
+        return unless verify_signature!(pt.to_address) # receiver rejects
+
         raise "Transfer is not pending" unless pt.pending?
 
         pt.update!(
@@ -82,6 +88,8 @@ module Api
       # DELETE /api/v1/pending_transfers/:id
       def cancel
         pt = PendingTransfer.find(params[:id])
+        return unless verify_signature!(pt.from_address) # sender cancels
+
         raise "Transfer is not pending" unless pt.pending?
 
         pt.update!(
