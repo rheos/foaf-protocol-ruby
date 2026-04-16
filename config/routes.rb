@@ -41,6 +41,7 @@ Rails.application.routes.draw do
 
       # === KEYPAIR GENERATION ===
       post "keypair", to: "meta#keypair"
+      post "recover", to: "meta#recover"
 
       # === TRANSFERS ===
       get "transfers", to: "transfers#show"   # ?transactionHash=...

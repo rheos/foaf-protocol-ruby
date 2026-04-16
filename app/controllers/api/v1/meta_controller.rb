@@ -8,16 +8,30 @@ module Api
       end
 
       # POST /api/v1/keypair
-      # Generate a new secp256k1 keypair. Returns everything once.
-      # FOAF stores nothing — the consuming app is responsible for the keys.
-      # Like a wallet generating a seed phrase: shown once, never stored here.
+      # Generate a new secp256k1 keypair with BIP-39 seed phrase.
+      # Returns everything once. FOAF stores nothing.
+      # The consuming app stores what it needs. The user writes down the seed phrase.
       def keypair
-        kp = SignatureVerifier.generate_keypair
+        result = SeedPhrase.generate
         render json: {
-          address: kp[:address],
-          publicKey: kp[:public_key],
-          privateKey: kp[:private_key]
+          seedPhrase: result[:seed_phrase],
+          address: result[:address],
+          publicKey: result[:public_key],
+          privateKey: result[:private_key]
         }
+      end
+
+      # POST /api/v1/recover
+      # Recover a keypair from a seed phrase. FOAF stores nothing.
+      def recover
+        result = SeedPhrase.recover(params[:seed_phrase])
+        render json: {
+          address: result[:address],
+          publicKey: result[:public_key],
+          privateKey: result[:private_key]
+        }
+      rescue ArgumentError => e
+        render json: { error: e.message }, status: :bad_request
       end
     end
   end
