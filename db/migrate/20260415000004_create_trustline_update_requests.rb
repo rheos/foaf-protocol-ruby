@@ -8,7 +8,7 @@
 class CreateTrustlineUpdateRequests < ActiveRecord::Migration[7.1]
   def change
     create_table :trustline_update_requests do |t|
-      t.references :trustline, null: false, foreign_key: true
+      t.references :trustline, null: false, foreign_key: true, index: { unique: true }
 
       # === PROPOSED TERMS (from initiator's perspective) ===
       t.decimal :creditline_given, precision: 20, scale: 2, null: false
@@ -21,9 +21,6 @@ class CreateTrustlineUpdateRequests < ActiveRecord::Migration[7.1]
       t.string :initiator_address, null: false, limit: 42
 
       t.timestamps
-
-      # One pending request per trustline
-      t.index :trustline_id, unique: true
     end
   end
 end

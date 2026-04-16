@@ -28,6 +28,7 @@ services:
       DATABASE_URL: mysql2://root:foaf_dev_password@db:3306/foaf_protocol_development
       RAILS_ENV: development
       RAILS_LOG_TO_STDOUT: "true"
+      SECRET_KEY_BASE: foaf_dev_secret_key_base_not_for_production
 
 volumes:
   foaf_db_data:

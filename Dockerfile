@@ -7,6 +7,10 @@ RUN apt-get update -qq && \
     default-mysql-client \
     git \
     pkg-config \
+    libsecp256k1-dev \
+    libyaml-dev \
+    automake \
+    libtool \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
