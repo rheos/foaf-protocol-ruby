@@ -6,6 +6,7 @@ require_relative "protocol/balance_math"
 require_relative "protocol/fee_calculator"
 require_relative "protocol/trustline_state_machine"
 require_relative "protocol/multi_hop_executor"
+require_relative "protocol/credloop_detector"
 
 module Foaf
   module Trustline
