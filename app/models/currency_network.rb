@@ -1,5 +1,5 @@
 class CurrencyNetwork < ApplicationRecord
-  has_many :trustlines, dependent: :restrict_with_error
+  has_many :trustlines, class_name: "Foaf::TrustlineRecord", dependent: :restrict_with_error
   has_many :operations, dependent: :restrict_with_error
   has_many :trustline_events, dependent: :restrict_with_error
   has_many :pending_transfers, dependent: :restrict_with_error
