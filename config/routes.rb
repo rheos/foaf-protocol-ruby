@@ -39,8 +39,8 @@ Rails.application.routes.draw do
         end
       end
 
-      # === IDENTITIES ===
-      resources :identities, param: :address, only: [:create, :show]
+      # === KEYPAIR GENERATION ===
+      post "keypair", to: "meta#keypair"
 
       # === TRANSFERS ===
       get "transfers", to: "transfers#show"   # ?transactionHash=...

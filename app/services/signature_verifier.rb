@@ -26,17 +26,23 @@ class SignatureVerifier
     false
   end
 
-  # Look up an identity's public key and verify against it.
+  # Verify that a signature was produced by the holder of the given address.
+  # Recovers the public key from the signature, derives the address, compares.
+  # No database lookup — just math. Same as how blockchain nodes verify.
   #
   # @param payload [String] the signed data
   # @param signature [String] hex-encoded signature
-  # @param address [String] 0x-prefixed address of the signer
+  # @param address [String] 0x-prefixed address of the claimed signer
   # @return [Boolean]
   def self.verify_by_address(payload:, signature:, address:)
-    identity = Identity.find_by(address: address&.downcase)
-    return false unless identity
+    return false if signature.blank? || address.blank?
 
-    verify(payload: payload, signature: signature, public_key_hex: identity.public_key)
+    recovered_pub = Eth::Signature.personal_recover(payload, signature)
+    recovered_address = Eth::Util.public_key_to_address(Eth::Util.hex_to_bin(recovered_pub)).to_s
+    recovered_address.downcase == address.downcase
+  rescue StandardError => e
+    Rails.logger.debug("[SignatureVerifier] Address verification failed: #{e.message}")
+    false
   end
 
   # Generate a new secp256k1 keypair.

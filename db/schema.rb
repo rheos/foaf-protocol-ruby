@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_15_000008) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_15_200000) do
   create_table "currency_networks", charset: "utf8mb4", force: :cascade do |t|
     t.string "address", limit: 42, null: false
     t.string "name", null: false
@@ -27,14 +27,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_15_000008) do
     t.datetime "updated_at", null: false
     t.index ["address"], name: "index_currency_networks_on_address", unique: true
     t.index ["symbol"], name: "index_currency_networks_on_symbol", unique: true
-  end
-
-  create_table "identities", charset: "utf8mb4", force: :cascade do |t|
-    t.string "address", limit: 42, null: false
-    t.text "public_key", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["address"], name: "index_identities_on_address", unique: true
   end
 
   create_table "operations", charset: "utf8mb4", force: :cascade do |t|
