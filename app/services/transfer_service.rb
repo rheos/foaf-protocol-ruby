@@ -155,13 +155,21 @@ class TransferService
       )
       events << transfer_event
 
-      {
+      transfer_result = {
         operation: op,
         events: events,
         total_fees: result[:total_fees],
         path: path,
         value: value
       }
+
+      # Trigger credloop detection after every transfer (debounced)
+      # Skip if this transfer IS a credloop cancellation (avoid infinite loop)
+      unless extra_data&.include?("credloop_cancellation")
+        CredloopRunner.trigger(network)
+      end
+
+      transfer_result
     end
   end
 
