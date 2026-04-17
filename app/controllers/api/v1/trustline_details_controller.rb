@@ -16,7 +16,17 @@ module Api
           )
         scope = scope.of_type(params[:type]) if params[:type].present?
 
-        render json: scope.recent.limit(100).map { |e|
+        events = scope.recent.limit(100).to_a
+
+        # Preload parent operations in one query so consumers can identify
+        # credloop cancellations (parent op has from == to) without per-row
+        # lookups. Only BalanceUpdate events have a meaningful parent here;
+        # Transfer events *are* the parent.
+        op_ids = events.map(&:operation_id).compact.uniq
+        ops_by_id = Operation.where(id: op_ids).index_by(&:id)
+
+        render json: events.map { |e|
+          parent = ops_by_id[e.operation_id]
           {
             networkAddress: network.address,
             blockNumber: e.id,
@@ -27,7 +37,13 @@ module Api
             transactionId: e.operation_id,
             value: e.value&.to_f,
             extraData: e.extra_data,
-            balance: e.balance&.to_f
+            balance: e.balance&.to_f,
+            parentOp: parent && {
+              from: parent.inputs["from"],
+              to: parent.inputs["to"],
+              value: parent.inputs["value"],
+              path: parent.inputs["path"]
+            }
           }.compact
         }
       end
