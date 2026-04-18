@@ -1,0 +1,49 @@
+services:
+  foaf-testnet:
+    build:
+      context: .
+      args:
+        RAILS_ENV: production
+    image: foaf-protocol-ruby:latest
+    restart: always
+    env_file:
+      - .env.testnet
+    environment:
+      RAILS_ENV: production
+      RAILS_LOG_TO_STDOUT: "true"
+      PORT: 3002
+      WEB_CONCURRENCY: 0
+      RAILS_MAX_THREADS: 2
+      FOAF_NETWORK: testnet
+    expose:
+      - "3002"
+    entrypoint: ["./entrypoint.prod.sh"]
+    networks:
+      - shared
+
+  foaf-production:
+    build:
+      context: .
+      args:
+        RAILS_ENV: production
+    image: foaf-protocol-ruby:latest
+    restart: always
+    env_file:
+      - .env.production
+    environment:
+      RAILS_ENV: production
+      RAILS_LOG_TO_STDOUT: "true"
+      PORT: 3002
+      WEB_CONCURRENCY: 0
+      RAILS_MAX_THREADS: 2
+      FOAF_NETWORK: production
+    expose:
+      - "3002"
+    entrypoint: ["./entrypoint.prod.sh"]
+    networks:
+      - shared
+
+networks:
+  shared:
+    name: railsbackend_default
+    external: true

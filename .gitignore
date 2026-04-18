@@ -19,3 +19,9 @@ tmp
 *.swo
 *~
 .DS_Store
+
+# Production env files (contain real credentials, live on server only)
+.env.testnet
+.env.production
+.env.local
+
