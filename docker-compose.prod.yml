@@ -5,6 +5,7 @@ services:
       args:
         RAILS_ENV: production
     image: foaf-protocol-ruby:latest
+    container_name: foaf-testnet
     restart: always
     env_file:
       - .env.testnet
@@ -27,6 +28,7 @@ services:
       args:
         RAILS_ENV: production
     image: foaf-protocol-ruby:latest
+    container_name: foaf-production
     restart: always
     env_file:
       - .env.production
