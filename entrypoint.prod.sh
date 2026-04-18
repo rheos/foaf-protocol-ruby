@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
+mkdir -p tmp/pids
 rm -f tmp/pids/server.pid
 
 echo "[entrypoint] FOAF_NETWORK=${FOAF_NETWORK:-unset} RAILS_ENV=${RAILS_ENV}"
