@@ -25,3 +25,6 @@ tmp
 .env.production
 .env.local
 
+# Rails runtime logs (should never be tracked)
+log/*.log
+
