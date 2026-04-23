@@ -29,7 +29,14 @@ Rails.application.routes.draw do
         post "path-info", to: "pathfinding#path_info"
         post "max-capacity-path-info", to: "pathfinding#max_capacity_path_info"
         post "close-trustline-path-info", to: "pathfinding#close_trustline_path_info"
+
+        # Generic operations enumeration (blockchain-style, used by indexers).
+        get "operations", to: "operations#index"
       end
+
+      # Single-operation detail with embedded events (eth_getTransactionReceipt
+      # analog). Generic — no credloop or analytics awareness in the protocol.
+      get "operations/:id", to: "operations#show"
 
       # === CROSS-NETWORK USER ENDPOINTS ===
       resources :users, param: :address, only: [] do
